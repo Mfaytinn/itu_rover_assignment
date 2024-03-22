@@ -4,14 +4,14 @@ from std_msgs.msg import String
 import bz2
 import binascii
 
-class StringOperations:
+class msg_converter:
     def __init__(self):
         rospy.init_node("frequent_char", anonymous=True)
         self.init()
         self.run()
 
     def init(self):
-        rospy.loginfo("String Operations Node Started!")
+        rospy.loginfo("Message Converter Node Started!")
 
         self.sub = rospy.Subscriber("/bz2_message", String, self.callback)
         self.pub = rospy.Publisher("/frequent_char", Char, queue_size=10)
@@ -22,11 +22,13 @@ class StringOperations:
     def callback(self, data):
         input_string = data.data
         
-        
         # convert hex to ascii 
         ascii_string = binascii.unhexlify(input_string)
+        
+        # decompress bz2
         string_o = bz2.decompress(ascii_string) 
-        # Perform operations on the input string
+        
+        # find the most frequent char
         freq = {}
         for char in string_o:
             if char in freq:
@@ -37,11 +39,9 @@ class StringOperations:
         self.frequent_char = max(freq, key=freq.get)
         rospy.loginfo(self.frequent_char)
 
-        # Publish the most frequent character
 
     def run(self):
         while not rospy.is_shutdown():
-
             frequent_char_msg = Char()
             frequent_char_msg.data = self.frequent_char
             self.pub.publish(frequent_char_msg)
@@ -49,7 +49,7 @@ class StringOperations:
 
 if __name__ == "__main__":
     try:
-        StringOperations()
+        msg_converter()
     except rospy.ROSInterruptException:
         pass
 
